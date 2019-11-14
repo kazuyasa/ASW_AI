@@ -1,0 +1,7 @@
+01.aihub/app/resources/data
+01.aihub/app/resources/face
+01.aihub/app/resources/test
+01.aihub/app/resources/train
+
+02.flask/__pycache__
+02.flask/myvenv
