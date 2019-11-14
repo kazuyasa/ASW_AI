@@ -19,11 +19,6 @@ app = Flask(__name__)
 
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
-def allwed_file(filename):
-    # 拡張子の確認
-    # OK=１ NG=0
-    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
-
 # GETでアクセスされた場合には、画像UPLOAD用のフォーム画面に遷移
 # TODO: 外部HTMLに変更する
 @app.route('/', methods=['GET'])
@@ -48,7 +43,7 @@ def return_form():
         </body>
     '''
 
-# ファイルを受け取る方法の指定
+# POSTでアクセスされた場合には、画像分類の予測結果を返却する
 @app.route('/', methods=['POST'])
 def predict_image():
     try:
@@ -56,16 +51,12 @@ def predict_image():
         # HACK:
         if 'file' not in request.files:
             raise Exception
-            # result='This video has been deleted'
-            # return jsonify({'result': str(result)}) 
         # データの取り出し
         file = request.files['file']
         # ファイル名がなかった時の処理
         # HACK:
         if file.filename == '':
             raise Exception
-            # result='This video has been deleted'
-            # return jsonify({'result': str(result)}) 
         # ファイルのチェック
         if file and allwed_file(file.filename):
             # 危険な文字を削除（サニタイズ処理）
@@ -75,11 +66,15 @@ def predict_image():
             # 予測
             result=predict(filename)
             # 予測結果を返す
+            # TODO: JSONでは無く、HTMLを返却する実装に変更する
             return jsonify({'result': str(result)})     
     except:
         return jsonify({'result': 'This Video Has Been Deleted'})
-    
 
+# 拡張子の確認
+def allwed_file(filename):
+    # OK=１ NG=0
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 # ユーザーがPOSTした画像から顔を切り出す
 def detect_face(image):
@@ -102,15 +97,13 @@ def detect_face(image):
                 continue
             img = cv2.resize(image,(64,64))
             img=np.expand_dims(img,axis=0)
-            # name = detect_who(img)
-            # cv2.putText(image,name,(x,y+height+20),cv2.FONT_HERSHEY_DUPLEX,1,(255,0,0),2)
             return img
     # 顔が検出されなかった時
+    # HACK: 例外処理
     else:
         result='This video has been deleted (no face)'
         return jsonify({'result': str(result)}) 
-    # return image
-    # return name
+
 
 def predict_who(img):
     print("PREDICT WHO")
